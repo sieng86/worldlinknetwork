@@ -144,7 +144,7 @@ app.post("/create_payment", async (req, res) => {
 
       headers: {
 
-        "Authorization": \`Key \${process.env.PI_API_KEY}\`,
+        "Authorization": `Key ${process.env.PI_API_KEY}`,
 
         "Content-Type": "application/json",
 
@@ -178,5 +178,5 @@ const PORT = process.env.PORT || 10000;
 
 const server = http.createServer(app);
 
-server.listen(PORT, () => console.log(\`✅ Server running on port \${PORT}\`));
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
