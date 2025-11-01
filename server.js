@@ -46,13 +46,45 @@ app.get("/", (req, res) => {
 
     <script>
 
+      console.log("✅ Pi SDK script loaded."); // log khi SDK tải
+
+      setTimeout(() => {
+
+        if (typeof Pi === "undefined") {
+
+          console.error("❌ Pi SDK not loaded. Make sure you are in Pi Browser.");
+
+          document.getElementById('status').innerText = '❌ Pi SDK not loaded. Please open in Pi Browser.';
+
+        } else {
+
+          console.log("Pi SDK loaded:", Pi);
+
+        }
+
+      }, 2000);
+
+
+
       async function pay() {
 
         document.getElementById('status').innerText = '⏳ Initializing Pi SDK...';
 
         try {
 
+          if (typeof Pi === "undefined") {
+
+            throw new Error("Pi SDK not found. Please open in Pi Browser.");
+
+          }
+
+
+
           Pi.init({ version: "2.0", sandbox: true });
+
+          console.log("✅ Pi SDK initialized successfully.");
+
+
 
           const payment = await Pi.createPayment({
 
@@ -64,15 +96,17 @@ app.get("/", (req, res) => {
 
           });
 
+
+
           document.getElementById('status').innerText = '✅ Payment created successfully!';
 
-          console.log(payment);
+          console.log("✅ Payment object:", payment);
 
         } catch (err) {
 
           document.getElementById('status').innerText = '❌ Payment failed or cancelled';
 
-          console.error(err);
+          console.error("❌ Payment error:", err);
 
         }
 
@@ -110,7 +144,7 @@ app.post("/create_payment", async (req, res) => {
 
       headers: {
 
-        "Authorization": `Key ${process.env.PI_API_KEY}`,
+        "Authorization": \`Key \${process.env.PI_API_KEY}\`,
 
         "Content-Type": "application/json",
 
@@ -124,11 +158,13 @@ app.post("/create_payment", async (req, res) => {
 
     const data = await response.json();
 
+    console.log("✅ Payment backend response:", data);
+
     res.json(data);
 
   } catch (error) {
 
-    console.error("❌ Payment error:", error);
+    console.error("❌ Payment backend error:", error);
 
     res.status(500).json({ error: "Payment failed" });
 
@@ -138,11 +174,9 @@ app.post("/create_payment", async (req, res) => {
 
 
 
-// ✅ Khởi động server HTTP
-
 const PORT = process.env.PORT || 10000;
 
 const server = http.createServer(app);
 
-server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(\`✅ Server running on port \${PORT}\`));
 
