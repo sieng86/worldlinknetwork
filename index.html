@@ -16,7 +16,7 @@
 
     body {
 
-      background-color: black;
+      background-color: #000;
 
       color: cyan;
 
@@ -24,7 +24,7 @@
 
       font-family: Arial, sans-serif;
 
-      padding-top: 50px;
+      padding-top: 60px;
 
     }
 
@@ -34,17 +34,17 @@
 
       border: none;
 
-      padding: 12px 25px;
-
       border-radius: 6px;
 
-      margin: 10px;
+      padding: 12px 24px;
+
+      margin: 8px;
 
       cursor: pointer;
 
       font-weight: bold;
 
-      opacity: 0.5;
+      opacity: 0.6;
 
       pointer-events: none;
 
@@ -62,13 +62,9 @@
 
     #status {
 
-      margin-top: 25px;
+      margin-top: 30px;
 
       font-size: 18px;
-
-      color: cyan;
-
-      word-break: break-word;
 
     }
 
@@ -96,27 +92,29 @@
 
   <script>
 
-    // 🧠 Bắt lỗi JS toàn cục
+    let userAuth = null;
 
-    window.onerror = function (msg, url, line, col, error) {
+    const statusEl = document.getElementById("status");
 
-      console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
 
-      document.getElementById("status").innerHTML = "⚠️ JS Error: " + msg;
+
+    // ✅ Bắt lỗi toàn cục để tránh frozen
+
+    window.onerror = (msg, url, line, col, err) => {
+
+      console.error("⚠️ JS Error:", msg, line, col);
+
+      statusEl.innerHTML = "⚠️ JS Error: " + msg;
 
     };
 
 
 
-    let userAuth = null;
+    // ✅ Kích hoạt nút
 
+    function enableButtons() {
 
-
-    async function enableButtons() {
-
-      document.getElementById("loginButton").classList.add("enabled");
-
-      document.getElementById("payButton").classList.add("enabled");
+      document.querySelectorAll("button").forEach((b) => b.classList.add("enabled"));
 
     }
 
@@ -124,15 +122,11 @@
 
     window.onload = async () => {
 
-      console.log("🚀 Checking Pi SDK...");
-
-
-
       if (typeof Pi === "undefined" || !Pi.init) {
 
-        document.getElementById("status").innerHTML =
+        statusEl.innerHTML =
 
-          "⚠️ Pi SDK not loaded. Please open in <b>Pi Browser</b> at:<br><b>https://worldlinknetwork.org</b>";
+          "⚠️ Pi SDK not detected.<br>Open this site in <b>Pi Browser</b>.";
 
         return;
 
@@ -140,55 +134,47 @@
 
 
 
-      console.log("✅ Pi SDK detected:", Pi);
-
-      document.getElementById("status").innerText = "✅ Pi SDK detected successfully.";
-
-
-
-      // ✅ Enable buttons
-
-      await enableButtons();
-
-
-
-      // 🧩 Khởi tạo SDK (testnet)
+      // 🔧 Init SDK (sandbox = true vì testnet)
 
       Pi.init({ version: "2.0", sandbox: true });
 
+      console.log("✅ Pi SDK initialized");
+
+      statusEl.textContent = "✅ Pi SDK detected successfully.";
+
+      enableButtons();
 
 
-      // 🔑 LOGIN
+
+      // 🟡 LOGIN
 
       document.getElementById("loginButton").addEventListener("click", async () => {
 
         try {
 
-          document.getElementById("status").innerText = "🔑 Logging in...";
+          statusEl.textContent = "🔑 Logging in...";
 
-          const scopes = ["username", "payments"];
+          const scopes = ["username", "payments"]; // 🧩 có "payments" scope để payment hoạt động
 
           const auth = await Pi.authenticate(scopes, (payment) => {
 
-            console.log("Payment callback:", payment);
+            console.log("💬 Payment callback:", payment);
 
           });
 
+
+
           userAuth = auth;
 
-          console.log("✅ Auth success:", auth);
+          console.log("✅ Login success:", auth);
 
-          document.getElementById("status").innerText =
-
-            "✅ Logged in as @" + auth.user.username + " (payments enabled)";
+          statusEl.textContent = "✅ Logged in as @" + auth.user.username;
 
         } catch (err) {
 
           console.error("❌ Login failed:", err);
 
-          document.getElementById("status").innerText =
-
-            "❌ Login failed: " + (err.message || err);
+          statusEl.textContent = "❌ Login failed: " + (err.message || err);
 
         }
 
@@ -196,21 +182,25 @@
 
 
 
-      // 💰 PAY
+      // 💰 PAYMENT
 
       document.getElementById("payButton").addEventListener("click", async () => {
 
+        if (!userAuth) {
+
+          statusEl.textContent = "⚠️ Please login first!";
+
+          return;
+
+        }
+
+
+
         try {
 
-          if (!userAuth) {
+          statusEl.textContent = "💰 Creating Pi Test Payment...";
 
-            document.getElementById("status").innerText = "⚠️ Please login first!";
 
-            return;
-
-          }
-
-          document.getElementById("status").innerText = "💰 Starting Pi payment...";
 
           const payment = await Pi.createPayment(
 
@@ -218,9 +208,9 @@
 
               amount: 1,
 
-              memo: "Test payment from WorldLink Network",
+              memo: "WorldLink Testnet Payment",
 
-              metadata: { purpose: "demo" },
+              metadata: { source: "demo" },
 
             },
 
@@ -228,21 +218,23 @@
 
               onReadyForServerApproval: (paymentId) => {
 
-                console.log("✅ Ready for approval:", paymentId);
+                console.log("🟡 Ready for approval:", paymentId);
 
               },
 
               onReadyForServerCompletion: (paymentId, txid) => {
 
-                console.log("✅ Ready for completion:", paymentId, txid);
+                console.log("✅ Completed:", paymentId, txid);
+
+                statusEl.textContent = "✅ Payment confirmed!";
 
               },
 
               onCancel: (reason) => {
 
-                console.warn("❌ Payment cancelled:", reason);
+                console.warn("❌ Cancelled:", reason);
 
-                document.getElementById("status").innerText = "❌ Payment cancelled.";
+                statusEl.textContent = "❌ Payment cancelled.";
 
               },
 
@@ -250,9 +242,7 @@
 
                 console.error("⚠️ Payment error:", error);
 
-                document.getElementById("status").innerText =
-
-                  "⚠️ Payment failed: " + (error.message || error);
+                statusEl.textContent = "⚠️ Payment failed: " + (error.message || error);
 
               },
 
@@ -260,13 +250,25 @@
 
           );
 
+
+
+          // Gửi payment tới backend xử lý test
+
+          await fetch("/api/complete_payment", {
+
+            method: "POST",
+
+            headers: { "Content-Type": "application/json" },
+
+            body: JSON.stringify(payment),
+
+          });
+
         } catch (err) {
 
-          console.error("❌ Error creating payment:", err);
+          console.error("❌ Payment error:", err);
 
-          document.getElementById("status").innerText =
-
-            "❌ Error creating payment: " + (err.message || err);
+          statusEl.textContent = "❌ Payment error: " + (err.message || err);
 
         }
 
