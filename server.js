@@ -66,58 +66,43 @@ app.get("/", (req, res) => {
 
 
 
-      async function pay() {
+ const payment = await Pi.createPayment({
 
-        document.getElementById('status').innerText = '⏳ Initializing Pi SDK...';
+  amount: 0.01,
 
-        try {
+  memo: "WorldLink Network Test Payment",
 
-          if (typeof Pi === "undefined") {
+  metadata: { type: "test" },
 
-            throw new Error("Pi SDK not found. Please open in Pi Browser.");
+  onReadyForServerApproval: (paymentId) => {
 
-          }
+    console.log("✅ Ready for server approval:", paymentId);
 
+  },
 
+  onReadyForServerCompletion: (paymentId, txid) => {
 
-          Pi.init({ version: "2.0", sandbox: true });
+    console.log("✅ Ready for server completion:", paymentId, txid);
 
-          console.log("✅ Pi SDK initialized successfully.");
+  },
 
+  onCancel: () => {
 
+    console.warn("❌ Payment cancelled by user.");
 
-          const payment = await Pi.createPayment({
+    document.getElementById('status').innerText = '❌ Payment cancelled by user.';
 
-            amount: 0.01,
+  },
 
-            memo: "WorldLink Network Test Payment",
+  onError: (error) => {
 
-            metadata: { type: "test" },
+    console.error("❌ Payment failed:", error);
 
-          });
+    document.getElementById('status').innerText = '❌ Payment failed: ' + error.message;
 
-
-
-          document.getElementById('status').innerText = '✅ Payment created successfully!';
-
-          console.log("✅ Payment object:", payment);
-
-        } catch (err) {
-
-          document.getElementById('status').innerText = '❌ Payment failed or cancelled';
-
-          console.error("❌ Payment error:", err);
-
-        }
-
-      }
-
-    </script>
-
-  `);
+  },
 
 });
-
 
 
 // ✅ Route xử lý payment qua backend
