@@ -2,153 +2,169 @@
 
 <html lang="en">
 
-  <head>
+<head>
 
-    <meta charset="UTF-8" />
+  <meta charset="UTF-8" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>🚀 WorldLink Network Testnet</title>
+  <title>🚀 WorldLink Network Testnet</title>
 
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-    <style>
+  <style>
 
-      body {
+    body {
 
-        background: black;
+      background-color: black;
 
-        color: aqua;
+      color: cyan;
 
-        font-family: Arial, sans-serif;
+      text-align: center;
 
-        text-align: center;
+      font-family: Arial, sans-serif;
 
-        padding: 40px;
+      padding-top: 50px;
+
+    }
+
+    h1 {
+
+      color: #00ffff;
+
+    }
+
+    button {
+
+      background-color: #ffcc00;
+
+      border: none;
+
+      padding: 12px 25px;
+
+      border-radius: 6px;
+
+      margin: 10px;
+
+      cursor: pointer;
+
+      font-weight: bold;
+
+    }
+
+    #status {
+
+      margin-top: 25px;
+
+      font-size: 18px;
+
+      color: cyan;
+
+      word-break: break-word;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>🚀 WorldLink Network Testnet is Live!</h1>
+
+  <p>Connected to Pi Testnet via Express Server</p>
+
+
+
+  <button id="loginButton">Login with Pi</button>
+
+  <button id="payButton">Pay with Pi</button>
+
+
+
+  <p id="status">🔍 Checking Pi SDK...</p>
+
+
+
+  <script>
+
+    // 🧠 Bắt lỗi JS toàn cục
+
+    window.onerror = function (msg, url, line, col, error) {
+
+      console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
+
+      document.getElementById("status").innerHTML = "⚠️ JS Error: " + msg;
+
+    };
+
+
+
+    window.onload = async () => {
+
+      console.log("🚀 Checking Pi SDK...");
+
+
+
+      // 🟡 Kiểm tra SDK có tồn tại hay không
+
+      if (typeof Pi === "undefined" || !Pi.init) {
+
+        console.error("❌ Pi SDK not found. Possibly wrong domain or outside Pi Browser.");
+
+        document.getElementById("status").innerHTML =
+
+          "⚠️ Pi SDK not loaded. Please open this page in <b>Pi Browser</b> at:<br><b>https://worldlinknetwork.org</b>";
+
+        return;
 
       }
 
-      button {
 
-        background: gold;
 
-        color: black;
+      // ✅ SDK được nhận diện
 
-        font-weight: bold;
+      console.log("✅ Pi SDK detected:", Pi);
 
-        padding: 10px 20px;
-
-        border: none;
-
-        border-radius: 6px;
-
-        cursor: pointer;
-
-      }
-
-      #status {
-
-        margin-top: 20px;
-
-        font-size: 18px;
-
-      }
-
-    </style>
-
-  </head>
+      document.getElementById("status").innerText = "✅ Pi SDK detected successfully.";
 
 
 
-  <body>
-
-    <h2>🚀 WorldLink Network Testnet is Live!</h2>
-
-    <p>Connected to Pi Testnet via Express Server</p>
-
-
-
-    <button id="loginBtn">Login with Pi</button>
-
-    <button id="payBtn">Pay with Pi</button>
-
-
-
-    <p id="status">🟢 Ready</p>
-
-
-
-    <script>
-
-      // 🧩 Bắt lỗi toàn cục
-
-      window.onerror = function (msg, url, line, col, error) {
-
-        console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
-
-        document.getElementById("status").innerText =
-
-          "⚠️ JS Error: " + msg + " (line " + line + ")";
-
-      };
-
-
-
-      // 🟣 Khởi tạo SDK
+      // 🧩 Khởi tạo SDK ở Testnet
 
       Pi.init({ version: "2.0", sandbox: true });
 
-      console.log("✅ Pi SDK initialized");
 
 
+      // 🔑 LOGIN FUNCTION
 
-      // 🟢 Kiểm tra SDK
-
-      if (typeof Pi === "undefined") {
-
-        document.getElementById("status").innerText =
-
-          "⚠️ SDK not loaded. Please open in Pi Browser.";
-
-        throw new Error("Pi SDK missing");
-
-      } else {
-
-        document.getElementById("status").innerText =
-
-          "✅ Pi SDK detected successfully.";
-
-      }
-
-
-
-      // 🟡 Login
-
-      document.getElementById("loginBtn").addEventListener("click", async () => {
+      document.getElementById("loginButton").addEventListener("click", async () => {
 
         try {
 
           document.getElementById("status").innerText = "🔑 Logging in...";
 
-          const scopes = ["payments"];
+          const scopes = ["username", "payments"];
 
-          const user = await Pi.authenticate(scopes, (onIncompletePaymentFound) => {
+          const auth = await Pi.authenticate(scopes, (payment) => {
 
-            console.log("🔍 Incomplete payment found:", onIncompletePaymentFound);
+            console.log("New payment:", payment);
 
           });
 
-          console.log("✅ Logged in user:", user);
+          console.log("✅ Auth success:", auth);
 
           document.getElementById("status").innerText =
 
-            "✅ Logged in as " + user.username;
+            "✅ Logged in as @" + auth.user.username;
 
         } catch (err) {
 
           console.error("❌ Login failed:", err);
 
-          document.getElementById("status").innerText = "❌ Login failed.";
+          document.getElementById("status").innerText =
+
+            "❌ Login failed: " + (err.message || err);
 
         }
 
@@ -156,75 +172,79 @@
 
 
 
-      // 💳 Payment
+      // 💰 PAYMENT FUNCTION
 
-      document.getElementById("payBtn").addEventListener("click", async () => {
+      document.getElementById("payButton").addEventListener("click", async () => {
 
         try {
 
-          document.getElementById("status").innerText = "💳 Processing payment...";
+          document.getElementById("status").innerText = "💰 Starting Pi payment...";
 
-          console.log("💰 Starting Pi payment...");
+          const payment = await Pi.createPayment(
 
+            {
 
+              amount: 1,
 
-          const payment = await Pi.createPayment({
+              memo: "Test payment from WorldLink Network",
 
-            amount: 0.01,
-
-            memo: "WorldLink Test Payment",
-
-            metadata: { type: "test" },
-
-            onReadyForServerApproval: (paymentId) => {
-
-              console.log("🟡 Ready for approval:", paymentId);
+              metadata: { purpose: "demo" },
 
             },
 
-            onReadyForServerCompletion: (paymentId, txid) => {
+            {
 
-              console.log("🟢 Ready for completion:", paymentId, txid);
+              onReadyForServerApproval: (paymentId) => {
 
-            },
+                console.log("✅ Ready for server approval:", paymentId);
 
-            onCancel: () => {
+              },
 
-              document.getElementById("status").innerText = "❌ Payment cancelled.";
+              onReadyForServerCompletion: (paymentId, txid) => {
 
-              console.warn("❌ Payment cancelled.");
+                console.log("✅ Ready for server completion:", paymentId, txid);
 
-            },
+              },
 
-            onError: (error) => {
+              onCancel: (reason) => {
 
-              document.getElementById("status").innerText =
+                console.warn("❌ Payment cancelled:", reason);
 
-                "❌ Payment failed or cancelled.";
+                document.getElementById("status").innerText = "❌ Payment cancelled.";
 
-              console.error("❌ Payment failed:", error);
+              },
 
-            },
+              onError: (error) => {
 
-          });
+                console.error("⚠️ Payment error:", error);
 
+                document.getElementById("status").innerText =
 
+                  "⚠️ Payment failed: " + (error.message || error);
 
-          console.log("✅ Payment object:", payment);
+              },
+
+            }
+
+          );
 
         } catch (err) {
 
-          console.error("⚠️ Payment error:", err);
+          console.error("❌ Error creating payment:", err);
 
-          document.getElementById("status").innerText = "⚠️ Payment error.";
+          document.getElementById("status").innerText =
+
+            "❌ Error creating payment: " + (err.message || err);
 
         }
 
       });
 
-    </script>
+    };
 
-  </body>
+  </script>
+
+</body>
 
 </html>
 
