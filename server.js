@@ -22,11 +22,28 @@ app.get("/validation-key.txt", (req, res) => {
 
 // ✅ Kiểm tra server
 
+import path from "path";
+
+import { fileURLToPath } from "url";
+
+import { dirname } from "path";
+
+
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = dirname(__filename);
+
+
+
+// ✅ phục vụ file index.html
+
 app.get("/", (req, res) => {
 
-  res.send("🚀 WorldLink Network Testnet Server is Running!");
+  res.sendFile(path.join(__dirname, "index.html"));
 
 });
+
 
 
 
