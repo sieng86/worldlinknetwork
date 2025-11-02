@@ -169,4 +169,8 @@
 </body>
 
 </html>
+window.onerror = function (msg, url, line, col, error) {
 
+  console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
+
+};
