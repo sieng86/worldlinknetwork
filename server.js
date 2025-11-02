@@ -46,6 +46,8 @@ app.get("/", (req, res) => {
 
         <p id="status"></p>
 
+
+
         <script>
 
           document.getElementById("payBtn").addEventListener("click", async () => {
@@ -60,9 +62,13 @@ app.get("/", (req, res) => {
 
               }
 
+
+
               Pi.init({ version: "2.0", sandbox: true });
 
               console.log("✅ Pi SDK initialized successfully.");
+
+              console.log("Pi SDK loaded:", Pi);
 
 
 
@@ -140,7 +146,7 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
 
-  console.log(\`🚀 Server running on port \${PORT}\`);
+  console.log(`🚀 Server running on port ${PORT}`);
 
 });
 
