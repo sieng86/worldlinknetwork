@@ -20,11 +20,19 @@
 
       color: cyan;
 
-      text-align: center;
-
       font-family: Arial, sans-serif;
 
+      text-align: center;
+
       padding-top: 60px;
+
+    }
+
+    h1 {
+
+      color: cyan;
+
+      font-size: 26px;
 
     }
 
@@ -38,17 +46,17 @@
 
       padding: 12px 24px;
 
-      margin: 8px;
+      margin: 10px;
 
       cursor: pointer;
 
       font-weight: bold;
 
-      opacity: 0.6;
+      opacity: 0.5;
 
       pointer-events: none;
 
-      transition: all 0.3s ease;
+      transition: 0.3s;
 
     }
 
@@ -62,7 +70,9 @@
 
     #status {
 
-      margin-top: 30px;
+      color: cyan;
+
+      margin-top: 20px;
 
       font-size: 18px;
 
@@ -80,9 +90,9 @@
 
 
 
-  <button id="loginButton">Login with Pi</button>
+  <button id="loginBtn">Login with Pi</button>
 
-  <button id="payButton">Pay with Pi</button>
+  <button id="payBtn">Pay with Pi</button>
 
 
 
@@ -98,19 +108,15 @@
 
 
 
-    // ✅ Bắt lỗi toàn cục để tránh frozen
+    window.onerror = (msg, url, line) => {
 
-    window.onerror = (msg, url, line, col, err) => {
-
-      console.error("⚠️ JS Error:", msg, line, col);
+      console.error("⚠️ JS Error:", msg);
 
       statusEl.innerHTML = "⚠️ JS Error: " + msg;
 
     };
 
 
-
-    // ✅ Kích hoạt nút
 
     function enableButtons() {
 
@@ -126,7 +132,7 @@
 
         statusEl.innerHTML =
 
-          "⚠️ Pi SDK not detected.<br>Open this site in <b>Pi Browser</b>.";
+          "⚠️ Pi SDK not found. Please open this site in <b>Pi Browser</b>.";
 
         return;
 
@@ -134,7 +140,7 @@
 
 
 
-      // 🔧 Init SDK (sandbox = true vì testnet)
+      // ✅ Kích hoạt SDK (testnet mode)
 
       Pi.init({ version: "2.0", sandbox: true });
 
@@ -148,13 +154,13 @@
 
       // 🟡 LOGIN
 
-      document.getElementById("loginButton").addEventListener("click", async () => {
+      document.getElementById("loginBtn").addEventListener("click", async () => {
 
         try {
 
           statusEl.textContent = "🔑 Logging in...";
 
-          const scopes = ["username", "payments"]; // 🧩 có "payments" scope để payment hoạt động
+          const scopes = ["username", "payments"];
 
           const auth = await Pi.authenticate(scopes, (payment) => {
 
@@ -162,11 +168,7 @@
 
           });
 
-
-
           userAuth = auth;
-
-          console.log("✅ Login success:", auth);
 
           statusEl.textContent = "✅ Logged in as @" + auth.user.username;
 
@@ -174,7 +176,7 @@
 
           console.error("❌ Login failed:", err);
 
-          statusEl.textContent = "❌ Login failed: " + (err.message || err);
+          statusEl.textContent = "❌ Login failed: " + err.message;
 
         }
 
@@ -184,7 +186,7 @@
 
       // 💰 PAYMENT
 
-      document.getElementById("payButton").addEventListener("click", async () => {
+      document.getElementById("payBtn").addEventListener("click", async () => {
 
         if (!userAuth) {
 
@@ -198,17 +200,15 @@
 
         try {
 
-          statusEl.textContent = "💰 Creating Pi Test Payment...";
+          statusEl.textContent = "💰 Creating test payment...";
 
-
-
-          const payment = await Pi.createPayment(
+          await Pi.createPayment(
 
             {
 
               amount: 1,
 
-              memo: "WorldLink Testnet Payment",
+              memo: "WorldLink Test Payment",
 
               metadata: { source: "demo" },
 
@@ -226,23 +226,21 @@
 
                 console.log("✅ Completed:", paymentId, txid);
 
-                statusEl.textContent = "✅ Payment confirmed!";
+                statusEl.textContent = "✅ Payment completed!";
 
               },
 
-              onCancel: (reason) => {
-
-                console.warn("❌ Cancelled:", reason);
+              onCancel: () => {
 
                 statusEl.textContent = "❌ Payment cancelled.";
 
               },
 
-              onError: (error) => {
+              onError: (err) => {
 
-                console.error("⚠️ Payment error:", error);
+                console.error("⚠️ Payment error:", err);
 
-                statusEl.textContent = "⚠️ Payment failed: " + (error.message || error);
+                statusEl.textContent = "⚠️ Payment error: " + err.message;
 
               },
 
@@ -250,25 +248,11 @@
 
           );
 
-
-
-          // Gửi payment tới backend xử lý test
-
-          await fetch("/api/complete_payment", {
-
-            method: "POST",
-
-            headers: { "Content-Type": "application/json" },
-
-            body: JSON.stringify(payment),
-
-          });
-
         } catch (err) {
 
-          console.error("❌ Payment error:", err);
+          console.error("❌ Payment failed:", err);
 
-          statusEl.textContent = "❌ Payment error: " + (err.message || err);
+          statusEl.textContent = "❌ Error: " + err.message;
 
         }
 
