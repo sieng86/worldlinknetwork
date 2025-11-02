@@ -2,15 +2,9 @@ import express from "express";
 
 import fetch from "node-fetch";
 
-import cors from "cors";
-
-import http from "http";
-
 
 
 const app = express();
-
-app.use(cors());
 
 app.use(express.json());
 
@@ -26,142 +20,127 @@ app.get("/validation-key.txt", (req, res) => {
 
 
 
-// ✅ Route kiểm tra server hoạt động
+// ✅ Route kiểm tra server
 
 app.get("/", (req, res) => {
 
   res.send(`
 
-    <h2>🚀 WorldLink Network Testnet is Live!</h2>
+    <html>
 
-    <p>Connected to Pi Testnet via Express Server</p>
+      <head>
 
-    <button onclick="pay()">Pay with Pi</button>
+        <title>WorldLink Network Testnet</title>
 
-    <p id="status"></p>
+        <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+      </head>
+
+      <body style="background-color:black;color:aqua;text-align:center;font-family:sans-serif;">
+
+        <h2>🚀 WorldLink Network Testnet is Live!</h2>
+
+        <p>Connected to Pi Testnet via Express Server</p>
+
+        <button id="payBtn" style="background-color:gold;padding:10px 20px;border:none;border-radius:8px;font-weight:bold;">Pay with Pi</button>
+
+        <p id="status"></p>
+
+        <script>
+
+          document.getElementById("payBtn").addEventListener("click", async () => {
+
+            document.getElementById('status').innerText = '⏳ Initializing Pi SDK...';
+
+            try {
+
+              if (typeof Pi === "undefined") {
+
+                throw new Error("Pi SDK not found. Please open in Pi Browser.");
+
+              }
+
+              Pi.init({ version: "2.0", sandbox: true });
+
+              console.log("✅ Pi SDK initialized successfully.");
 
 
 
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+              const payment = await Pi.createPayment({
 
-    <script>
+                amount: 0.01,
 
-      console.log("✅ Pi SDK script loaded."); // log khi SDK tải
+                memo: "WorldLink Network Test Payment",
 
-      setTimeout(() => {
+                metadata: { type: "test" },
 
-        if (typeof Pi === "undefined") {
+                onReadyForServerApproval: (paymentId) => {
 
-          console.error("❌ Pi SDK not loaded. Make sure you are in Pi Browser.");
+                  console.log("✅ Ready for server approval:", paymentId);
 
-          document.getElementById('status').innerText = '❌ Pi SDK not loaded. Please open in Pi Browser.';
+                },
 
-        } else {
+                onReadyForServerCompletion: (paymentId, txid) => {
 
-          console.log("Pi SDK loaded:", Pi);
+                  console.log("✅ Ready for server completion:", paymentId, txid);
 
-        }
+                },
 
-      }, 2000);
+                onCancel: () => {
+
+                  console.warn("❌ Payment cancelled by user.");
+
+                  document.getElementById('status').innerText = '❌ Payment cancelled by user.';
+
+                },
+
+                onError: (error) => {
+
+                  console.error("❌ Payment failed:", error);
+
+                  document.getElementById('status').innerText = '❌ Payment failed: ' + error.message;
+
+                },
+
+              });
 
 
 
- const payment = await Pi.createPayment({
+              document.getElementById('status').innerText = '✅ Payment created successfully!';
 
-  amount: 0.01,
+              console.log("✅ Payment object:", payment);
 
-  memo: "WorldLink Network Test Payment",
 
-  metadata: { type: "test" },
 
-  onReadyForServerApproval: (paymentId) => {
+            } catch (err) {
 
-    console.log("✅ Ready for server approval:", paymentId);
+              document.getElementById('status').innerText = '❌ Payment failed or cancelled';
 
-  },
+              console.error("❌ Payment error:", err);
 
-  onReadyForServerCompletion: (paymentId, txid) => {
+            }
 
-    console.log("✅ Ready for server completion:", paymentId, txid);
+          });
 
-  },
+        </script>
 
-  onCancel: () => {
+      </body>
 
-    console.warn("❌ Payment cancelled by user.");
+    </html>
 
-    document.getElementById('status').innerText = '❌ Payment cancelled by user.';
-
-  },
-
-  onError: (error) => {
-
-    console.error("❌ Payment failed:", error);
-
-    document.getElementById('status').innerText = '❌ Payment failed: ' + error.message;
-
-  },
+  `);
 
 });
 
 
-// ✅ Route xử lý payment qua backend
 
-app.post("/create_payment", async (req, res) => {
-
-  try {
-
-    const paymentData = {
-
-      amount: 0.01,
-
-      memo: "WorldLink Network Test Payment",
-
-      metadata: { type: "test" },
-
-    };
-
-
-
-    const response = await fetch("https://api.minepi.com/v2/payments", {
-
-      method: "POST",
-
-      headers: {
-
-        "Authorization": `Key ${process.env.PI_API_KEY}`,
-
-        "Content-Type": "application/json",
-
-      },
-
-      body: JSON.stringify(paymentData),
-
-    });
-
-
-
-    const data = await response.json();
-
-    console.log("✅ Payment backend response:", data);
-
-    res.json(data);
-
-  } catch (error) {
-
-    console.error("❌ Payment backend error:", error);
-
-    res.status(500).json({ error: "Payment failed" });
-
-  }
-
-});
-
-
+// ✅ Khởi động server
 
 const PORT = process.env.PORT || 10000;
 
-const server = http.createServer(app);
+app.listen(PORT, () => {
 
-server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+  console.log(\`🚀 Server running on port \${PORT}\`);
+
+});
 
