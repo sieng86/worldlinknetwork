@@ -28,12 +28,6 @@
 
     }
 
-    h1 {
-
-      color: #00ffff;
-
-    }
-
     button {
 
       background-color: #ffcc00;
@@ -49,6 +43,20 @@
       cursor: pointer;
 
       font-weight: bold;
+
+      opacity: 0.5;
+
+      pointer-events: none;
+
+      transition: all 0.3s ease;
+
+    }
+
+    button.enabled {
+
+      opacity: 1;
+
+      pointer-events: auto;
 
     }
 
@@ -100,21 +108,31 @@
 
 
 
+    let userAuth = null;
+
+
+
+    async function enableButtons() {
+
+      document.getElementById("loginButton").classList.add("enabled");
+
+      document.getElementById("payButton").classList.add("enabled");
+
+    }
+
+
+
     window.onload = async () => {
 
       console.log("🚀 Checking Pi SDK...");
 
 
 
-      // 🟡 Kiểm tra SDK có tồn tại hay không
-
       if (typeof Pi === "undefined" || !Pi.init) {
-
-        console.error("❌ Pi SDK not found. Possibly wrong domain or outside Pi Browser.");
 
         document.getElementById("status").innerHTML =
 
-          "⚠️ Pi SDK not loaded. Please open this page in <b>Pi Browser</b> at:<br><b>https://worldlinknetwork.org</b>";
+          "⚠️ Pi SDK not loaded. Please open in <b>Pi Browser</b> at:<br><b>https://worldlinknetwork.org</b>";
 
         return;
 
@@ -122,143 +140,27 @@
 
 
 
-      // ✅ SDK được nhận diện
-
       console.log("✅ Pi SDK detected:", Pi);
 
       document.getElementById("status").innerText = "✅ Pi SDK detected successfully.";
 
 
 
-      // 🧩 Khởi tạo SDK ở Testnet
+      // ✅ Enable buttons
+
+      await enableButtons();
+
+
+
+      // 🧩 Khởi tạo SDK (testnet)
 
       Pi.init({ version: "2.0", sandbox: true });
 
 
-let userAuth = null; // 🧠 Lưu token đăng nhập
 
+      // 🔑 LOGIN
 
-
-// 🔑 LOGIN FUNCTION
-
-document.getElementById("loginButton").addEventListener("click", async () => {
-
-  try {
-
-    document.getElementById("status").innerText = "🔑 Logging in...";
-
-    const scopes = ["username", "payments"]; // ⚡ Quan trọng: thêm "payments"
-
-    const auth = await Pi.authenticate(scopes, (payment) => {
-
-      console.log("New payment callback:", payment);
-
-    });
-
-    userAuth = auth; // ✅ Lưu lại thông tin user
-
-    console.log("✅ Auth success:", auth);
-
-    document.getElementById("status").innerText =
-
-      "✅ Logged in as @" + auth.user.username + " (payments enabled)";
-
-  } catch (err) {
-
-    console.error("❌ Login failed:", err);
-
-    document.getElementById("status").innerText =
-
-      "❌ Login failed: " + (err.message || err);
-
-  }
-
-});
-
-
-
-// 💰 PAYMENT FUNCTION
-
-document.getElementById("payButton").addEventListener("click", async () => {
-
-  try {
-
-    // ⚠️ Nếu chưa đăng nhập, bắt người dùng đăng nhập trước
-
-    if (!userAuth) {
-
-      document.getElementById("status").innerText = "⚠️ Please login with Pi first!";
-
-      return;
-
-    }
-
-
-
-    document.getElementById("status").innerText = "💰 Starting Pi payment...";
-
-    const payment = await Pi.createPayment(
-
-      {
-
-        amount: 1,
-
-        memo: "Test payment from WorldLink Network",
-
-        metadata: { purpose: "demo" },
-
-      },
-
-      {
-
-        onReadyForServerApproval: (paymentId) => {
-
-          console.log("✅ Ready for server approval:", paymentId);
-
-        },
-
-        onReadyForServerCompletion: (paymentId, txid) => {
-
-          console.log("✅ Ready for server completion:", paymentId, txid);
-
-        },
-
-        onCancel: (reason) => {
-
-          console.warn("❌ Payment cancelled:", reason);
-
-          document.getElementById("status").innerText = "❌ Payment cancelled.";
-
-        },
-
-        onError: (error) => {
-
-          console.error("⚠️ Payment error:", error);
-
-          document.getElementById("status").innerText =
-
-            "⚠️ Payment failed: " + (error.message || error);
-
-        },
-
-      }
-
-    );
-
-  } catch (err) {
-
-    console.error("❌ Error creating payment:", err);
-
-    document.getElementById("status").innerText =
-
-      "❌ Error creating payment: " + (err.message || err);
-
-  }
-
-});
-
-
-     
+      document.getElementById("loginButton").addEventListener("click", async () => {
 
         try {
 
@@ -268,15 +170,17 @@ document.getElementById("payButton").addEventListener("click", async () => {
 
           const auth = await Pi.authenticate(scopes, (payment) => {
 
-            console.log("New payment:", payment);
+            console.log("Payment callback:", payment);
 
           });
+
+          userAuth = auth;
 
           console.log("✅ Auth success:", auth);
 
           document.getElementById("status").innerText =
 
-            "✅ Logged in as @" + auth.user.username;
+            "✅ Logged in as @" + auth.user.username + " (payments enabled)";
 
         } catch (err) {
 
@@ -292,11 +196,19 @@ document.getElementById("payButton").addEventListener("click", async () => {
 
 
 
-      // 💰 PAYMENT FUNCTION
+      // 💰 PAY
 
       document.getElementById("payButton").addEventListener("click", async () => {
 
         try {
+
+          if (!userAuth) {
+
+            document.getElementById("status").innerText = "⚠️ Please login first!";
+
+            return;
+
+          }
 
           document.getElementById("status").innerText = "💰 Starting Pi payment...";
 
@@ -316,13 +228,13 @@ document.getElementById("payButton").addEventListener("click", async () => {
 
               onReadyForServerApproval: (paymentId) => {
 
-                console.log("✅ Ready for server approval:", paymentId);
+                console.log("✅ Ready for approval:", paymentId);
 
               },
 
               onReadyForServerCompletion: (paymentId, txid) => {
 
-                console.log("✅ Ready for server completion:", paymentId, txid);
+                console.log("✅ Ready for completion:", paymentId, txid);
 
               },
 
