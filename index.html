@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>🚀 WorldLink Network Testnet</title>
+
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <style>
+
+    body {
+
+      background-color: #000;
+
+      color: #00ffff;
+
+      font-family: Arial, sans-serif;
+
+      text-align: center;
+
+      margin-top: 100px;
+
+    }
+
+    button {
+
+      background-color: gold;
+
+      border: none;
+
+      padding: 12px 24px;
+
+      font-size: 16px;
+
+      font-weight: bold;
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      margin-top: 20px;
+
+    }
+
+    button:hover {
+
+      background-color: #ffcf33;
+
+    }
+
+    h1 {
+
+      color: cyan;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>🚀 WorldLink Network Testnet is Live!</h1>
+
+  <p>Connected to Pi Testnet via Express Server</p>
+
+  <button id="payButton">Pay with Pi</button>
+
+  <p id="status"></p>
+
+
+
+  <script>
+
+    // ✅ Kiểm tra SDK
+
+    window.onload = () => {
+
+      console.log("✅ Checking Pi SDK...");
+
+      console.log("Pi SDK loaded:", Pi);
+
+      document.getElementById("status").innerText = "✅ SDK loaded successfully";
+
+    };
+
+
+
+    // ✅ Khởi tạo Pi SDK ở chế độ Testnet
+
+    Pi.init({ version: "2.0", sandbox: true });
+
+
+
+    // ✅ Khi bấm nút thanh toán
+
+    document.getElementById("payButton").addEventListener("click", async () => {
+
+      console.log("🟡 Pay button clicked. Starting Pi Payment...");
+
+      document.getElementById("status").innerText = "Processing payment...";
+
+
+
+      try {
+
+        const payment = await Pi.createPayment({
+
+          amount: 0.01,
+
+          memo: "WorldLink Network Test Payment",
+
+          metadata: { type: "test" },
+
+          onReadyForServerApproval: (paymentId) => {
+
+            console.log("✅ Ready for server approval:", paymentId);
+
+          },
+
+          onReadyForServerCompletion: (paymentId, txid) => {
+
+            console.log("✅ Ready for server completion:", paymentId, txid);
+
+            document.getElementById("status").innerText = "✅ Payment successful!";
+
+          },
+
+          onCancel: () => {
+
+            console.warn("❌ Payment cancelled by user.");
+
+            document.getElementById("status").innerText = "❌ Payment cancelled.";
+
+          },
+
+          onError: (error) => {
+
+            console.error("❌ Payment failed:", error);
+
+            document.getElementById("status").innerText = "❌ Payment failed or cancelled";
+
+          },
+
+        });
+
+
+
+        console.log("🔹 Payment object:", payment);
+
+      } catch (err) {
+
+        console.error("⚠️ Error creating payment:", err);
+
+        document.getElementById("status").innerText = "⚠️ Error starting payment";
+
+      }
+
+    });
+
+  </script>
+
+</body>
+
+</html>
+
