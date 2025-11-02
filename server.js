@@ -10,130 +10,69 @@ app.use(express.json());
 
 
 
-// ✅ Route xác minh domain
+// ✅ Cho phép Pi Browser truy cập server
+
+app.use((req, res, next) => {
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  next();
+
+});
+
+
+
+// ✅ File xác minh domain (bắt buộc)
 
 app.get("/validation-key.txt", (req, res) => {
 
-  res.send("b48014ec743d514ab33e37677098001ac3794c"); // Đừng đổi giá trị nếu Pi yêu cầu xác minh
+  res.send(
+
+    "b48014ec743d514ab33e37677098001ac37940103548fa21cb889e6147de69b5d6dcff7b3239cb61b8f1876e85fcebb26bd62150da83b7e1e2335009b984f928"
+
+  );
 
 });
 
 
 
-// ✅ Kiểm tra server
-
-import path from "path";
-
-import { fileURLToPath } from "url";
-
-import { dirname } from "path";
-
-
-
-const __filename = fileURLToPath(import.meta.url);
-
-const __dirname = dirname(__filename);
-
-
-
-// ✅ phục vụ file index.html
+// ✅ Route kiểm tra server
 
 app.get("/", (req, res) => {
 
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.send("🚀 WorldLink Network Testnet Server is Running!");
 
 });
 
 
 
+// ✅ Route giả lập xử lý thanh toán
 
-// ✅ Approve payment (bắt buộc có)
+app.post("/api/complete_payment", async (req, res) => {
 
-app.post("/approve_payment", async (req, res) => {
+  const paymentData = req.body;
 
-  try {
-
-    const paymentId = req.body.paymentId;
-
-    console.log("🟡 Approving payment:", paymentId);
-
-
-
-    // Gửi request lên Pi API Testnet
-
-    const response = await fetch("https://api.minepi.com/v2/payments/" + paymentId + "/approve", {
-
-      method: "POST",
-
-      headers: {
-
-        "Authorization": `Key ${process.env.PI_API_KEY}`, // dùng API key Testnet của bạn
-
-        "Content-Type": "application/json"
-
-      },
-
-    });
-
-
-
-    const data = await response.json();
-
-    console.log("✅ Payment approved:", data);
-
-    res.json({ status: "ok", data });
-
-  } catch (err) {
-
-    console.error("❌ Error approving payment:", err);
-
-    res.status(500).json({ error: "Approval failed", details: err.message });
-
-  }
-
-});
-
-
-
-// ✅ Complete payment
-
-app.post("/complete_payment", async (req, res) => {
+  console.log("💰 Received payment request:", paymentData);
 
   try {
 
-    const { paymentId, txid } = req.body;
+    res.json({
 
-    console.log("🟢 Completing payment:", paymentId, txid);
+      status: "success",
 
-
-
-    const response = await fetch("https://api.minepi.com/v2/payments/" + paymentId + "/complete", {
-
-      method: "POST",
-
-      headers: {
-
-        "Authorization": `Key ${process.env.PI_API_KEY}`,
-
-        "Content-Type": "application/json"
-
-      },
+      message: "✅ Payment processed successfully (Testnet simulation)",
 
     });
 
+  } catch (error) {
 
+    console.error("❌ Payment processing failed:", error);
 
-    const data = await response.json();
-
-    console.log("✅ Payment completed:", data);
-
-    res.json({ status: "completed", data });
-
-  } catch (err) {
-
-    console.error("❌ Error completing payment:", err);
-
-    res.status(500).json({ error: "Completion failed", details: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
 
   }
 
@@ -145,7 +84,7 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
 
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 
 });
 
