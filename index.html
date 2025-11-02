@@ -16,11 +16,11 @@
 
       body {
 
-        font-family: Arial, sans-serif;
-
-        background-color: black;
+        background: black;
 
         color: aqua;
+
+        font-family: Arial, sans-serif;
 
         text-align: center;
 
@@ -30,7 +30,7 @@
 
       button {
 
-        background-color: gold;
+        background: gold;
 
         color: black;
 
@@ -40,7 +40,7 @@
 
         border: none;
 
-        border-radius: 8px;
+        border-radius: 6px;
 
         cursor: pointer;
 
@@ -68,7 +68,11 @@
 
 
 
-    <button id="payButton">Pay with Pi</button>
+    <button id="loginBtn">Login with Pi</button>
+
+    <button id="payBtn">Pay with Pi</button>
+
+
 
     <p id="status">🟢 Ready</p>
 
@@ -76,133 +80,147 @@
 
     <script>
 
-      // 🟢 Toàn bộ xử lý chính
+      // 🧩 Bắt lỗi toàn cục
 
-      window.onload = () => {
+      window.onerror = function (msg, url, line, col, error) {
 
-        console.log("🧩 Loading Pi SDK...");
+        console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
 
-        document.getElementById("status").innerText = "🔄 Initializing Pi SDK...";
+        document.getElementById("status").innerText =
 
+          "⚠️ JS Error: " + msg + " (line " + line + ")";
 
-
-        // 🟣 Khởi tạo Pi SDK
-
-        Pi.init({ version: "2.0", sandbox: true });
-
-        console.log("✅ Pi SDK initialized.");
+      };
 
 
 
-        // 🧠 Kiểm tra SDK
+      // 🟣 Khởi tạo SDK
 
-        if (typeof Pi === "undefined") {
+      Pi.init({ version: "2.0", sandbox: true });
+
+      console.log("✅ Pi SDK initialized");
+
+
+
+      // 🟢 Kiểm tra SDK
+
+      if (typeof Pi === "undefined") {
+
+        document.getElementById("status").innerText =
+
+          "⚠️ SDK not loaded. Please open in Pi Browser.";
+
+        throw new Error("Pi SDK missing");
+
+      } else {
+
+        document.getElementById("status").innerText =
+
+          "✅ Pi SDK detected successfully.";
+
+      }
+
+
+
+      // 🟡 Login
+
+      document.getElementById("loginBtn").addEventListener("click", async () => {
+
+        try {
+
+          document.getElementById("status").innerText = "🔑 Logging in...";
+
+          const scopes = ["payments"];
+
+          const user = await Pi.authenticate(scopes, (onIncompletePaymentFound) => {
+
+            console.log("🔍 Incomplete payment found:", onIncompletePaymentFound);
+
+          });
+
+          console.log("✅ Logged in user:", user);
 
           document.getElementById("status").innerText =
 
-            "⚠️ Pi SDK is NOT loaded. Please open in Pi Browser.";
+            "✅ Logged in as " + user.username;
 
-          console.error("⚠️ Pi SDK not detected.");
+        } catch (err) {
 
-          return;
+          console.error("❌ Login failed:", err);
 
-        } else {
-
-          document.getElementById("status").innerText =
-
-            "✅ Pi SDK detected successfully.";
-
-          console.log("✅ Pi SDK detected successfully:", Pi);
+          document.getElementById("status").innerText = "❌ Login failed.";
 
         }
 
-
-
-        // 🟣 Nút thanh toán
-
-        const payButton = document.getElementById("payButton");
-
-        payButton.addEventListener("click", async () => {
-
-          try {
-
-            console.log("💰 Starting Pi Test Payment...");
-
-            document.getElementById("status").innerText = "💳 Processing payment...";
+      });
 
 
 
-            const payment = await Pi.createPayment({
+      // 💳 Payment
 
-              amount: 0.01,
+      document.getElementById("payBtn").addEventListener("click", async () => {
 
-              memo: "WorldLink Test Payment",
+        try {
 
-              metadata: { type: "test" },
+          document.getElementById("status").innerText = "💳 Processing payment...";
 
-              onReadyForServerApproval: (paymentId) => {
-
-                console.log("🟡 Ready for server approval:", paymentId);
-
-              },
-
-              onReadyForServerCompletion: (paymentId, txid) => {
-
-                console.log("🟢 Ready for completion:", paymentId, txid);
-
-              },
-
-              onCancel: () => {
-
-                console.warn("❌ Payment cancelled by user.");
-
-                document.getElementById("status").innerText = "❌ Payment cancelled.";
-
-              },
-
-              onError: (error) => {
-
-                console.error("❌ Payment failed:", error);
-
-                document.getElementById("status").innerText =
-
-                  "❌ Payment failed or cancelled.";
-
-              },
-
-            });
+          console.log("💰 Starting Pi payment...");
 
 
 
-            console.log("✅ Payment object:", payment);
+          const payment = await Pi.createPayment({
 
-          } catch (err) {
+            amount: 0.01,
 
-            console.error("⚠️ Error creating payment:", err);
+            memo: "WorldLink Test Payment",
 
-            document.getElementById("status").innerText =
+            metadata: { type: "test" },
 
-              "⚠️ Error starting payment.";
+            onReadyForServerApproval: (paymentId) => {
 
-          }
+              console.log("🟡 Ready for approval:", paymentId);
 
-        });
+            },
+
+            onReadyForServerCompletion: (paymentId, txid) => {
+
+              console.log("🟢 Ready for completion:", paymentId, txid);
+
+            },
+
+            onCancel: () => {
+
+              document.getElementById("status").innerText = "❌ Payment cancelled.";
+
+              console.warn("❌ Payment cancelled.");
+
+            },
+
+            onError: (error) => {
+
+              document.getElementById("status").innerText =
+
+                "❌ Payment failed or cancelled.";
+
+              console.error("❌ Payment failed:", error);
+
+            },
+
+          });
 
 
 
-        // 🧩 Bắt lỗi toàn cục để debug
+          console.log("✅ Payment object:", payment);
 
-        window.onerror = function (msg, url, line, col, error) {
+        } catch (err) {
 
-          console.error("⚠️ JS Error:", msg, "at", line + ":" + col, error);
+          console.error("⚠️ Payment error:", err);
 
-          document.getElementById("status").innerText =
+          document.getElementById("status").innerText = "⚠️ Payment error.";
 
-            "⚠️ JS Error: " + msg + " (line " + line + ")";
+        }
 
-        };
-
-      };
+      });
 
     </script>
 
