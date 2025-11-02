@@ -135,10 +135,130 @@
       Pi.init({ version: "2.0", sandbox: true });
 
 
+let userAuth = null; // 🧠 Lưu token đăng nhập
 
-      // 🔑 LOGIN FUNCTION
 
-      document.getElementById("loginButton").addEventListener("click", async () => {
+
+// 🔑 LOGIN FUNCTION
+
+document.getElementById("loginButton").addEventListener("click", async () => {
+
+  try {
+
+    document.getElementById("status").innerText = "🔑 Logging in...";
+
+    const scopes = ["username", "payments"]; // ⚡ Quan trọng: thêm "payments"
+
+    const auth = await Pi.authenticate(scopes, (payment) => {
+
+      console.log("New payment callback:", payment);
+
+    });
+
+    userAuth = auth; // ✅ Lưu lại thông tin user
+
+    console.log("✅ Auth success:", auth);
+
+    document.getElementById("status").innerText =
+
+      "✅ Logged in as @" + auth.user.username + " (payments enabled)";
+
+  } catch (err) {
+
+    console.error("❌ Login failed:", err);
+
+    document.getElementById("status").innerText =
+
+      "❌ Login failed: " + (err.message || err);
+
+  }
+
+});
+
+
+
+// 💰 PAYMENT FUNCTION
+
+document.getElementById("payButton").addEventListener("click", async () => {
+
+  try {
+
+    // ⚠️ Nếu chưa đăng nhập, bắt người dùng đăng nhập trước
+
+    if (!userAuth) {
+
+      document.getElementById("status").innerText = "⚠️ Please login with Pi first!";
+
+      return;
+
+    }
+
+
+
+    document.getElementById("status").innerText = "💰 Starting Pi payment...";
+
+    const payment = await Pi.createPayment(
+
+      {
+
+        amount: 1,
+
+        memo: "Test payment from WorldLink Network",
+
+        metadata: { purpose: "demo" },
+
+      },
+
+      {
+
+        onReadyForServerApproval: (paymentId) => {
+
+          console.log("✅ Ready for server approval:", paymentId);
+
+        },
+
+        onReadyForServerCompletion: (paymentId, txid) => {
+
+          console.log("✅ Ready for server completion:", paymentId, txid);
+
+        },
+
+        onCancel: (reason) => {
+
+          console.warn("❌ Payment cancelled:", reason);
+
+          document.getElementById("status").innerText = "❌ Payment cancelled.";
+
+        },
+
+        onError: (error) => {
+
+          console.error("⚠️ Payment error:", error);
+
+          document.getElementById("status").innerText =
+
+            "⚠️ Payment failed: " + (error.message || error);
+
+        },
+
+      }
+
+    );
+
+  } catch (err) {
+
+    console.error("❌ Error creating payment:", err);
+
+    document.getElementById("status").innerText =
+
+      "❌ Error creating payment: " + (err.message || err);
+
+  }
+
+});
+
+
+     
 
         try {
 
