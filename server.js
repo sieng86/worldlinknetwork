@@ -1,12 +1,22 @@
 import express from "express";
 
-import fetch from "node-fetch";
+import path from "path";
+
+import { fileURLToPath } from "url";
 
 
 
 const app = express();
 
 app.use(express.json());
+
+
+
+// 🧭 Giúp xác định thư mục hiện tại
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 
 
@@ -26,7 +36,7 @@ app.use((req, res, next) => {
 
 
 
-// ✅ File xác minh domain (bắt buộc)
+// ✅ File xác minh domain (Validation Key mới)
 
 app.get("/validation-key.txt", (req, res) => {
 
@@ -40,23 +50,27 @@ app.get("/validation-key.txt", (req, res) => {
 
 
 
-// ✅ Route kiểm tra server
+// ✅ Serve giao diện chính
+
+app.use(express.static(__dirname));
+
+
 
 app.get("/", (req, res) => {
 
-  res.send("🚀 WorldLink Network Testnet Server is Running!");
+  res.sendFile(path.join(__dirname, "index.html"));
 
 });
 
 
 
-// ✅ Route giả lập xử lý thanh toán
+// ✅ Nhận dữ liệu payment test từ client
 
 app.post("/api/complete_payment", async (req, res) => {
 
   const paymentData = req.body;
 
-  console.log("💰 Received payment request:", paymentData);
+  console.log("💰 Received payment:", paymentData);
 
   try {
 
@@ -64,15 +78,15 @@ app.post("/api/complete_payment", async (req, res) => {
 
       status: "success",
 
-      message: "✅ Payment processed successfully (Testnet simulation)",
+      message: "✅ Payment simulated successfully (Testnet)",
 
     });
 
-  } catch (error) {
+  } catch (err) {
 
-    console.error("❌ Payment processing failed:", error);
+    console.error("❌ Payment error:", err);
 
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Server error" });
 
   }
 
@@ -82,9 +96,5 @@ app.post("/api/complete_payment", async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 
-app.listen(PORT, () => {
-
-  console.log(`✅ Server running on port ${PORT}`);
-
-});
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
